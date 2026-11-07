@@ -42,7 +42,7 @@ Authenticate using the `token` query parameter. WebSocket query authentication i
   {"sensor_type":"temperature","value":21.5,"unit":"C"}
   ```
 
-  Supported sensor types are `temperature`, `humidity`, `lighting`, and `motion`. Values for `lighting` and `motion` are numeric (0 or 1 conventionally). Events are persisted and broadcast only to connected admins.
+  Supported sensor types are `temperature`, `humidity`, `lighting`, `motion`, and `battery`. Values for `lighting` and `motion` are numeric (0 or 1 conventionally); battery is a percentage from 0 to 100. Events are persisted and broadcast only to connected admins.
 
 - `WS /ws/gps?token=<COURIER_JWT>&order_id=<ORDER_ID>` accepts:
 

@@ -79,6 +79,7 @@ def seed_demo_data() -> None:
             ("humidity", 48.0, "%"),
             ("motion", 1.0, "bool"),
             ("lighting", 1.0, "bool"),
+            ("battery", 100.0, "%"),
         )
         for sensor_type, value, unit in readings:
             if sensor_type not in existing_types:

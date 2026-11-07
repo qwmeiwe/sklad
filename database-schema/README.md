@@ -38,7 +38,7 @@ erDiagram
 
     SENSOR_DATA {
         int id PK
-        string sensor_type "temperature | humidity | lighting | motion"
+        string sensor_type "temperature | humidity | lighting | motion | battery"
         float value
         string unit "nullable"
         datetime timestamp
@@ -93,12 +93,14 @@ erDiagram
 | Поле | Тип SQLite | Ограничения | Назначение |
 |---|---|---|---|
 | `id` | `INTEGER` | Primary key, индекс | Идентификатор измерения |
-| `sensor_type` | `VARCHAR(32)` | `NOT NULL`, индекс | Тип: `temperature`, `humidity`, `lighting`, `motion` |
+| `sensor_type` | `VARCHAR(32)` | `NOT NULL`, индекс | Тип: `temperature`, `humidity`, `lighting`, `motion`, `battery` |
 | `value` | `FLOAT` | `NOT NULL` | Числовое значение |
 | `unit` | `VARCHAR(16)` | `NULL` | Например, `C`, `%`, `bool` |
 | `timestamp` | `DATETIME` | `NOT NULL`, индекс | Время измерения UTC |
 
-Для `lighting` и `motion` симулятор отправляет `0` или `1`; освещение меняется вместе с моковым датчиком движения.
+Для `lighting` и `motion` симулятор отправляет `0` или `1`; освещение меняется вместе с моковым датчиком движения. Для `battery` значение — заряд аккумулятора в процентах.
+
+Симулятор удерживает температуру около 22,4 °C с небольшими изменениями (не более 0,03 °C за минутное измерение). Заряд батареи отправляется раз в 10 секунд и в демонстрационном ускоренном режиме уменьшается на 1 процентный пункт за измерение. При достижении 17% записывается значение 17%, затем сразу значение 100% — имитация замены аккумулятора.
 
 #### `gps_data`
 

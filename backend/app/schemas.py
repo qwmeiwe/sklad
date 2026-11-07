@@ -63,7 +63,7 @@ class OrderRead(BaseModel):
 
 
 class SensorInput(BaseModel):
-    sensor_type: Literal["temperature", "humidity", "lighting", "motion"]
+    sensor_type: Literal["temperature", "humidity", "lighting", "motion", "battery"]
     value: float = Field(allow_inf_nan=False)
     unit: str | None = Field(default=None, max_length=16)
     timestamp: datetime | None = None

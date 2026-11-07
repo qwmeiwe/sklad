@@ -26,7 +26,7 @@ export type Order = {
   updated_at: string;
 };
 
-export type SensorType = "temperature" | "humidity" | "lighting" | "motion";
+export type SensorType = "temperature" | "humidity" | "lighting" | "motion" | "battery";
 
 export type SensorReading = {
   id: number;

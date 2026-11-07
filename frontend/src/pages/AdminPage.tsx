@@ -112,7 +112,7 @@ export function AdminPage() {
         <LoadingLine />
       ) : (
         <>
-          <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <MetricCard
               label="Температура"
               value={sensorValue("temperature")}
@@ -124,6 +124,12 @@ export function AdminPage() {
               value={sensorValue("humidity")}
               unit={latestSensors.get("humidity")?.unit ?? "%"}
               detail="Склад / датчик 02"
+            />
+            <MetricCard
+              label="Заряд датчика"
+              value={sensorValue("battery")}
+              unit={latestSensors.get("battery")?.unit ?? "%"}
+              detail="Замена аккумулятора при 17%"
             />
             <MetricCard
               label="Освещение"

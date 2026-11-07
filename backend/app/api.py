@@ -208,7 +208,9 @@ def delete_order(order_id: int, db: Db, _: AdminUser) -> None:
 def sensor_history(
     db: TelemetryDb,
     _: Annotated[User, Depends(require_roles(UserRole.ADMIN))],
-    sensor_type: str | None = Query(default=None, pattern="^(temperature|humidity|lighting|motion)$"),
+    sensor_type: str | None = Query(
+        default=None, pattern="^(temperature|humidity|lighting|motion|battery)$"
+    ),
     limit: int = Query(default=100, ge=1, le=1000),
 ) -> list[SensorData]:
     statement = select(SensorData).order_by(SensorData.timestamp.desc()).limit(limit)

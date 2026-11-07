@@ -10,6 +10,7 @@ import os
 import random
 import time
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit, urlunsplit
@@ -23,8 +24,35 @@ TEMPERATURE_INTERVAL = 60.0
 HUMIDITY_INTERVAL = 60.0
 MOTION_INTERVAL = 10.0
 LIGHTING_INTERVAL = 10.0
+BATTERY_INTERVAL = 10.0
+BATTERY_REPLACEMENT_THRESHOLD = 17
 GPS_INTERVAL = 5.0
 ACK_TIMEOUT = 15.0
+
+
+@dataclass
+class SensorSimulatorState:
+    temperature: float = 22.4
+    humidity: float = 48.0
+    motion: int = 0
+    battery_level: int = 100
+
+    def update_temperature(self) -> float:
+        self.temperature = min(22.6, max(22.2, self.temperature + random.uniform(-0.03, 0.03)))
+        return round(self.temperature, 2)
+
+    def update_humidity(self) -> float:
+        self.humidity = min(49.0, max(47.0, self.humidity + random.uniform(-0.1, 0.1)))
+        return round(self.humidity, 1)
+
+    def battery_readings(self) -> tuple[tuple[int, ...], bool]:
+        level = self.battery_level
+        if level <= BATTERY_REPLACEMENT_THRESHOLD:
+            self.battery_level = 100
+            return (level, self.battery_level), True
+
+        self.battery_level -= 1
+        return (level,), False
 
 
 def _api_url(server_url: str, path: str) -> str:
@@ -89,46 +117,54 @@ async def _send(websocket, payload: dict) -> None:
     await _receive_acknowledgement(websocket)
 
 
-def _sensor_reading(sensor_type: str, motion: int) -> tuple[float | int, str]:
-    if sensor_type == "temperature":
-        return round(random.uniform(18.0, 26.0), 1), "C"
-    if sensor_type == "humidity":
-        return round(random.uniform(35.0, 65.0), 1), "%"
-    if sensor_type == "motion":
-        return motion, "bool"
-    if sensor_type == "lighting":
-        return motion, "bool"
-    raise ValueError(f"Unsupported sensor type: {sensor_type}")
+async def _send_sensor_reading(websocket, sensor_type: str, value: float | int, unit: str) -> None:
+    await _send(
+        websocket,
+        {
+            "sensor_type": sensor_type,
+            "value": value,
+            "unit": unit,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+    LOGGER.info("%s: %s %s", sensor_type, value, unit)
 
 
-async def _simulate_sensors(websocket) -> None:
+async def _simulate_sensors(websocket, state: SensorSimulatorState) -> None:
     intervals = {
         "temperature": TEMPERATURE_INTERVAL,
         "humidity": HUMIDITY_INTERVAL,
         "motion": MOTION_INTERVAL,
         "lighting": LIGHTING_INTERVAL,
+        "battery": BATTERY_INTERVAL,
     }
     next_reading = dict.fromkeys(intervals, time.monotonic())
-    motion = 0
+    next_motion_change = time.monotonic() + random.uniform(30.0, 120.0)
 
     while True:
         now = time.monotonic()
         for sensor_type, interval in intervals.items():
             if now < next_reading[sensor_type]:
                 continue
-            if sensor_type == "motion":
-                motion = int(random.random() < 0.55)
-            value, unit = _sensor_reading(sensor_type, motion)
-            await _send(
-                websocket,
-                {
-                    "sensor_type": sensor_type,
-                    "value": value,
-                    "unit": unit,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                },
-            )
-            LOGGER.info("%s: %s %s", sensor_type, value, unit)
+
+            if sensor_type == "temperature":
+                await _send_sensor_reading(websocket, sensor_type, state.update_temperature(), "C")
+            elif sensor_type == "humidity":
+                await _send_sensor_reading(websocket, sensor_type, state.update_humidity(), "%")
+            elif sensor_type == "motion":
+                if now >= next_motion_change:
+                    state.motion = 1 - state.motion
+                    next_motion_change = now + random.uniform(30.0, 120.0)
+                await _send_sensor_reading(websocket, sensor_type, state.motion, "bool")
+            elif sensor_type == "lighting":
+                await _send_sensor_reading(websocket, sensor_type, state.motion, "bool")
+            else:
+                readings, replaced = state.battery_readings()
+                for reading in readings:
+                    await _send_sensor_reading(websocket, sensor_type, reading, "%")
+                if replaced:
+                    LOGGER.info("Sensor battery reached 17%%; replaced with a new 100%% battery.")
+
             next_reading[sensor_type] = time.monotonic() + interval
 
         delay = max(0.0, min(next_reading.values()) - time.monotonic())
@@ -244,9 +280,10 @@ def _parse_args() -> argparse.Namespace:
 async def _run(args: argparse.Namespace) -> None:
     jobs = []
     if args.mode in {"all", "sensors"}:
+        sensor_state = SensorSimulatorState()
         sensor_query = urlencode({"token": args.iot_token})
         sensor_url = _websocket_url(args.server_url, f"/ws/sensors?{sensor_query}")
-        jobs.append(_run_forever("Sensors", sensor_url, _simulate_sensors))
+        jobs.append(_run_forever("Sensors", sensor_url, _simulate_sensors, sensor_state))
 
     if args.mode in {"all", "gps"}:
         token = await asyncio.to_thread(
