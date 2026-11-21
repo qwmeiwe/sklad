@@ -20,8 +20,8 @@ from websockets.asyncio.client import connect
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 LOGGER = logging.getLogger("iot_simulator")
-TEMPERATURE_INTERVAL = 60.0
-HUMIDITY_INTERVAL = 60.0
+TEMPERATURE_INTERVAL = 20.0
+HUMIDITY_INTERVAL = 20.0
 MOTION_INTERVAL = 10.0
 LIGHTING_INTERVAL = 10.0
 BATTERY_INTERVAL = 10.0

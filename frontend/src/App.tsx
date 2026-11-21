@@ -4,12 +4,13 @@ import { LoginPage } from "./pages/LoginPage";
 import { AdminPage } from "./pages/AdminPage";
 import { CourierPage } from "./pages/CourierPage";
 import { ClientPage } from "./pages/ClientPage";
+import { LoadingLine } from "./components/ui";
 import type { UserRole } from "./types";
 import type { ReactNode } from "react";
 
 function RoleRoute({ role, children }: { role: UserRole; children: ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="p-8 text-sm font-bold uppercase">Проверка сессии...</div>;
+  if (loading) return <LoadingLine />;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== role) return <Navigate to={`/${user.role}`} replace />;
   return children;

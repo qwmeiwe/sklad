@@ -52,7 +52,7 @@ Authenticate using the `token` query parameter. WebSocket query authentication i
 
   The order must currently be assigned to that courier. GPS events are persisted and broadcast to admins, that courier, and the order's client only.
 
-Both channels return `{"type":"accepted",...}` after storing an event and `{"type":"error",...}` for invalid or rejected messages. Clients should send sensor/GPS events at the frequencies required by the device (10 seconds for lighting/motion, 60 seconds for temperature/humidity, and 5 seconds for GPS).
+Both channels return `{"type":"accepted",...}` after storing an event and `{"type":"error",...}` for invalid or rejected messages. The included simulator sends lighting, motion, and battery events every 10 seconds, temperature and humidity every 20 seconds, and GPS every 5 seconds. Physical devices may use their own appropriate sampling intervals.
 
 ## Simulator
 

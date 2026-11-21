@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { ErrorNotice, LoadingLine, roleLabels } from "../components/ui";
 import type { UserRole } from "../types";
 
-const roles: { value: UserRole; label: string }[] = [
-  { value: "admin", label: "Администратор" },
-  { value: "courier", label: "Курьер" },
-  { value: "client", label: "Клиент" },
+const demoAccounts: { role: UserRole; username: string; password: string; label: string }[] = [
+  { role: "admin", username: "demo_admin", password: "DemoAdmin123!", label: "Администратор" },
+  { role: "courier", username: "demo_courier", password: "DemoCourier123!", label: "Курьер" },
+  { role: "client", username: "demo_client", password: "DemoClient123!", label: "Клиент" },
 ];
 
 export function LoginPage() {
@@ -18,8 +19,15 @@ export function LoginPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  if (loading) return <div className="p-8 text-sm font-bold uppercase">Проверка сессии...</div>;
+  if (loading) return <LoadingLine />;
   if (user) return <Navigate to={`/${user.role}`} replace />;
+
+  function chooseDemo(account: (typeof demoAccounts)[number]) {
+    setRole(account.role);
+    setUsername(account.username);
+    setPassword(account.password);
+    setError("");
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,88 +44,86 @@ export function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-screen bg-[#F4F4F0] text-[#171717] lg:grid-cols-[1.1fr_0.9fr]">
-      <section className="flex flex-col justify-between border-b-2 border-[#171717] p-8 sm:p-12 lg:border-b-0 lg:border-r-2 lg:p-16">
-        <p className="text-xs font-black uppercase tracking-[0.24em] text-[#FF5500]">
-          Smart logistics / 01
-        </p>
-        <div className="py-16">
-          <p className="text-xs font-bold uppercase tracking-[0.2em]">Складская телематика</p>
-          <h1 className="mt-5 max-w-2xl text-5xl font-black uppercase leading-[0.95] tracking-tight sm:text-7xl">
-            Движение.
-            <br />
-            Под контролем.
-          </h1>
-          <p className="mt-8 max-w-md text-sm leading-6 text-[#575750]">
-            Состояние склада и маршрут доставки — в одной системе, в реальном времени.
+    <main className="login-shell">
+      <section className="login-visual">
+        <div className="login-logo">
+          <span aria-hidden="true" className="brand-mark">с</span>
+          <span>склад.</span>
+        </div>
+        <div className="login-copy">
+          <p className="login-kicker">Логистика, которая движется</p>
+          <h1 className="login-headline">Всё на своём<br />месте. <em>И в пути.</em></h1>
+          <p className="login-description">
+            Заказы, склад и маршруты — в одном спокойном рабочем пространстве. Актуальные данные без лишнего шума.
           </p>
         </div>
-        <p className="text-xs font-bold uppercase tracking-widest">Logistics control</p>
+        <div className="login-stats">
+          <div><p className="login-stat-value">24 / 7</p><p className="login-stat-label">Контроль операций</p></div>
+          <div><p className="login-stat-value">Live</p><p className="login-stat-label">Телеметрия и маршруты</p></div>
+          <div><p className="login-stat-value">3 роли</p><p className="login-stat-label">Одно рабочее место</p></div>
+        </div>
       </section>
 
-      <section className="flex items-center justify-center p-6 sm:p-12">
-        <form className="w-full max-w-md" onSubmit={handleSubmit}>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#FF5500]">Авторизация</p>
-          <h2 className="mt-3 text-3xl font-black uppercase">Войти в систему</h2>
+      <section className="login-form-side">
+        <form className="login-form" onSubmit={handleSubmit}>
+          <p className="eyebrow">Рабочее пространство</p>
+          <h2 className="login-form-heading">Рады видеть вас</h2>
+          <p className="login-form-subtitle">Войдите в систему, чтобы продолжить работу.</p>
 
-          <fieldset className="mt-8">
-            <legend className="mb-3 text-xs font-bold uppercase tracking-widest">Роль</legend>
-            <div className="grid grid-cols-3 border-2 border-[#171717]">
-              {roles.map((item) => (
-                <label
-                  key={item.value}
-                  className={`cursor-pointer border-r border-[#171717] p-3 text-center text-[10px] font-bold uppercase last:border-r-0 sm:text-xs ${
-                    role === item.value ? "bg-[#FF5500] text-white" : ""
-                  }`}
-                >
-                  <input
-                    className="sr-only"
-                    type="radio"
-                    name="role"
-                    value={item.value}
-                    checked={role === item.value}
-                    onChange={() => setRole(item.value)}
-                  />
-                  {item.label}
-                </label>
-              ))}
-            </div>
-            <p className="mt-2 text-xs text-[#575750]">Роль должна совпадать с ролью учётной записи.</p>
-          </fieldset>
+          <div className="demo-heading">
+            <span>Быстрый вход</span>
+            <span className="demo-label">Демо-аккаунты</span>
+          </div>
+          <div className="demo-options">
+            {demoAccounts.map((account) => (
+              <button
+                aria-pressed={username === account.username}
+                className={`demo-option${username === account.username ? " is-selected" : ""}`}
+                key={account.role}
+                onClick={() => chooseDemo(account)}
+                type="button"
+              >
+                <strong>{account.label}</strong>
+                <span>{account.username}</span>
+              </button>
+            ))}
+          </div>
 
-          <label className="mt-6 block text-xs font-bold uppercase tracking-widest" htmlFor="username">
+          <label className="login-field" htmlFor="username">
             Логин
+            <input
+              autoComplete="username"
+              className="field"
+              id="username"
+              onChange={(event) => setUsername(event.target.value)}
+              placeholder="Ваш логин"
+              required
+              value={username}
+            />
           </label>
-          <input
-            autoComplete="username"
-            className="field mt-2"
-            id="username"
-            onChange={(event) => setUsername(event.target.value)}
-            required
-            value={username}
-          />
 
-          <label className="mt-5 block text-xs font-bold uppercase tracking-widest" htmlFor="password">
+          <label className="login-field" htmlFor="password">
             Пароль
+            <input
+              autoComplete="current-password"
+              className="field"
+              id="password"
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Ваш пароль"
+              required
+              type="password"
+              value={password}
+            />
           </label>
-          <input
-            autoComplete="current-password"
-            className="field mt-2"
-            id="password"
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            type="password"
-            value={password}
-          />
+          <input name="role" type="hidden" value={role} />
+          <p className="field-help">Роль: {roleLabels[role]} · проверяется по учётной записи</p>
 
-          {error && (
-            <p className="mt-5 border-2 border-[#FF5500] p-3 text-sm font-bold" role="alert">
-              {error}
-            </p>
-          )}
-          <button className="button-primary mt-7 w-full" disabled={submitting} type="submit">
-            {submitting ? "Входим..." : "Войти"}
+          {error && <div className="mt-4"><ErrorNotice>{error}</ErrorNotice></div>}
+          <button className="button-primary login-submit" disabled={submitting} type="submit">
+            {submitting ? "Подключаемся…" : "Войти в систему"}
+            <span aria-hidden="true">↗</span>
           </button>
+          <p className="login-footer">Демо-доступы предназначены для локальной разработки.</p>
         </form>
       </section>
     </main>

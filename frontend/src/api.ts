@@ -44,8 +44,44 @@ export const getUsers = (token: string) => request<User[]>("/api/users", token);
 
 export const getOrders = (token: string) => request<Order[]>("/api/orders", token);
 
+export const createOrder = (
+  token: string,
+  payload: { description: string; client_id: number; courier_id: number | null },
+) => request<Order>("/api/orders", token, { method: "POST", body: JSON.stringify(payload) });
+
+export const updateOrder = (
+  token: string,
+  orderId: number,
+  payload: Partial<Pick<Order, "description" | "client_id" | "courier_id" | "status">>,
+) =>
+  request<Order>(`/api/orders/${orderId}`, token, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+
+export const deleteOrder = (token: string, orderId: number) =>
+  request<void>(`/api/orders/${orderId}`, token, { method: "DELETE" });
+
 export const getSensorHistory = (token: string) =>
   request<SensorReading[]>("/api/telemetry/sensors?limit=100", token);
+
+export const createUser = (
+  token: string,
+  payload: { username: string; password: string; role: User["role"]; email: string | null },
+) => request<User>("/api/users", token, { method: "POST", body: JSON.stringify(payload) });
+
+export const updateUser = (
+  token: string,
+  userId: number,
+  payload: Partial<Pick<User, "username" | "email" | "role" | "is_active">> & { password?: string },
+) =>
+  request<User>(`/api/users/${userId}`, token, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+
+export const deleteUser = (token: string, userId: number) =>
+  request<void>(`/api/users/${userId}`, token, { method: "DELETE" });
 
 export const getGpsHistory = (token: string, orderId?: number) => {
   const query = orderId === undefined ? "" : `?order_id=${orderId}&limit=100`;

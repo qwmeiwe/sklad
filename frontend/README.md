@@ -9,6 +9,18 @@
 
 Vite proxies REST, health, and WebSocket requests to the local backend. Set `VITE_API_URL` in `.env` to use another backend origin. The API's CORS settings must allow that frontend origin.
 
-The login screen's role selector is a convenience check: the actual role always comes from the authenticated backend account. The frontend stores the JWT in local storage and sends it to the API and authenticated WebSocket connections.
+The login screen has shortcuts for the local demo accounts. The selected role is checked against the authenticated backend account; it is never trusted as the account's actual role. The frontend stores the JWT in local storage and sends it to the API and authenticated WebSocket connections.
 
-Run `npm run typecheck` or `npm run build` to validate the app. The courier screen sends mock GPS coordinates every 5 seconds while a shift is active. The admin screen listens for sensor and GPS updates; clients subscribe only to their own selected order.
+The admin workspace supports creating, assigning, updating, and deleting orders, as well as creating and managing user roles and access. Sensor readings and courier positions update over WebSockets. Clients can track only their own selected order.
+
+To see changing warehouse readings locally, start the sensor simulator from the project root in a separate terminal after starting the backend:
+
+```powershell
+python -m pip install -r simulator\requirements.txt
+$env:IOT_DEVICE_TOKEN = "the value of IOT_DEVICE_TOKEN from backend\.env"
+python simulator\iot_simulator.py --mode sensors --verbose
+```
+
+The admin dashboard receives each sensor reading live and shows when readings were last updated. Without a physical sensor or a running simulator, it displays the latest saved readings and indicates when new data is not arriving.
+
+Run `npm run typecheck` or `npm run build` to validate the app. While a shift is active, the courier screen sends mock GPS coordinates every 5 seconds; connect a device GPS source for real-world location updates.
